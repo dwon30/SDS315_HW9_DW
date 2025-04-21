@@ -1,0 +1,155 @@
+---
+title: "Homework 9"
+author: "Donghwan Won"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(moderndive)
+
+
+Solder <- read.csv('C:/Users/namyu/OneDrive/바탕 화면/SDS315/HW9/solder.csv')
+
+groceries <- read.csv('C:/Users/namyu/OneDrive/바탕 화면/SDS315/HW9/groceries.csv')
+
+```
+
+## 1.
+
+#A
+```{r}
+ggplot(Solder) + 
+  geom_jitter(aes(x = Opening, y = skips)) +
+  labs(
+    title = "Relationship between size of the opending and number of skips",
+    x = "Size of the Opening",
+    y = "Number of Skips",
+  )
+
+
+```
+
+```{r}
+ggplot(Solder) + 
+  geom_jitter(aes(x = Solder, y = skips)) +
+  labs(
+    title = "Relationship between thickness of the alley and number of skips",
+    x = "Thickness of the alley",
+    y = "Number of Skips",
+  )
+
+```
+
+#B
+```{r}
+model_solder = lm(skips ~ Opening + Solder + Opening:Solder, data=Solder)
+round(coef(model_solder), 2)
+
+```
+
+```{r}
+
+get_regression_table(model_solder, conf.level =0.95)
+```
+
+# C
+
+Intercept 0.39 is the estimated average number of skips when the opening is large and solder is thick. 
+
+OpeningM is the using medium openings and thick solder. 2.41 means average number of skips increased by 2.41 compared to large openings. 
+
+OpeningS is the using small openings and thick solder. 5.31 means average number of skips increased by 5.31 compared to large openings. 
+
+SolderThin is the using thin solder and large openings. 2.28 means average number of skips increased by 2.28 compared to thick solder.
+
+OpeningM:SolderThin is the using medium openings and thin solder. -0.74 means the using thin solder with medium openings is 0.74 skips fewer than the using thin solder with large openings.
+
+OpeningS:SolderThin is the using Small openings and thin solder. 9.65 means the using thin solder with small openings is 9.65 skips more than the using thin solder with large openings.
+
+# D
+
+It would be large openings with thick solder, because estimate of the intercept is 0.393 and that's the lowest estimate compare to others. 
+
+## 2.
+
+# A.
+```{r}
+store_price_avg <- groceries %>%
+  group_by(Store) %>%
+  summarize(avg_price = mean(Price, na.rm=TRUE))
+
+ggplot(store_price_avg) + 
+  geom_col(aes(x = Store, y = avg_price)) +
+  coord_flip()
+```
+
+# B.
+```{r}
+number_store <- groceries %>%
+  group_by(Product) %>%
+  summarize(number_product = n())
+
+ggplot(number_store) + 
+  geom_col(aes(x = Product, y = number_product)) +
+  coord_flip()
+
+```
+
+# C.
+```{r}
+regression_price <- lm(Price ~ Product + Type, data = groceries)
+type <- get_regression_table(regression_price, conf.level =0.95)
+type <- type %>%
+  filter(!str_starts(term, "Product"))
+type
+```
+Compared with ordinary grocery stores (like Albertsons, HEB, or Krogers), convenience stores charge somewhere between 0.41 and 0.92 dollars more for the same product.
+
+
+# D.
+```{r}
+store_price <- lm(Price ~ Product + Store, data = groceries)
+store_price
+
+```
+
+The two stores that charge the lowest prices when comparing the same product are Walmart and Kroger Fresh Fare. The two stores that charge the highest prices are Whole Foods and Wheatsville Food Co-Op.
+
+
+# E.
+
+Based on the regression model, Central Market charges about 7 cents more than HEB for the same product. However, this difference is relatively small when compared to the full range of store effects from Walmart to Whole Foods. This suggests that the perception of Central Market as a pricier store may be more related to the types of products it carries, rather than consistently higher prices for the same products.
+
+
+
+# F.
+```{r}
+groceries <- groceries %>%
+  mutate(Income10K = Income / 10000)
+model_income <- lm(Price ~ Product + Income10K, data = groceries)
+summary(model_income)
+
+```
+
+Consumers in poorer ZIP codes pay slightly more on average, but the effect is not statistically significant. 
+
+##. 3
+# Part A
+True. There is a positive linear relationship as % minority increases, the number of FAIR policies per 100 housing units increases too. Estimate 0.014 means for every 1% minority populatioin, there's an increase of 0.014 FAIR policies per 100 units. 
+
+# Part B
+Undecidable. Model B has estimate of 0.398. It means that every 1% increase in pre-WWII housing, the minority percentage increases by 0.398 percentage points. However, model did not directly tests whether the effect of minority percentage on FAIR policies depends on housing age. So we can not really tell whether there is an interaction between two. 
+
+# Part C.
+False. When you look at the minority:fire_risklow from get_regression_table from model C, estimate is -0.001 and p-value is 0.839. Estimate value -0.001 tells us interaction effect is basically close to 0. P-value 0.839 is too high which mean this is no significant difference between the two groups. There are no evidence the relationship is stronger in high-risk areas.
+
+# Part D.
+False. Adding income reduces the minority effect, but does not remove it. When you add income in Model D2, estimate drops from 0.014 to 0.010. But it is still statiscially significant. Even after accounting for income, minority percentage still independently predicts higher FAIR policy rates.
+
+# Part E. 
+True. In model E, minority estimate is 0.008. P-value is 0.006 which is statistically significant. This means that after controlling for other factors, ZIP codes with higher minority percentages tend to have higher FAIR policy rates. Since it's statistically significant this suggests that this isn't just because of income differences, housing age, or fire risk. 
